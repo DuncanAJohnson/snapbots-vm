@@ -29,12 +29,12 @@ export default class PatchCoreBlocks {
     fetch(args, util){
         const url = Cast.toString(args.URL);
         const method = Cast.toString(args.METHOD || 'GET');
-        const headers = args.HEADERS || {};
-        const body = args.BODY || {};
+        const headers = Cast.toString(args.HEADERS || "{}");
+        const body = Cast.toString(args.BODY || "{}");
 
         const fetchOptions = {
             method: method,
-            headers: headers,
+            headers: JSON.parse(headers),
         }
         // conditionally add body to fetch options
         if (method === 'POST' || method === 'PUT') {
