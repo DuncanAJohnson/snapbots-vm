@@ -101,7 +101,7 @@ async function _initPyodide(interruptBuffer) {
  * Polling interval in milliseconds
  * @type {number}
  */
-const GLOBALS_POLLING_INTERVAL = 500;
+const GLOBALS_POLLING_INTERVAL = 50;
 
 /**
  * ID of the globals polling timer
