@@ -41,9 +41,11 @@ class PyatchWorker {
             this._threadPromiseMap[threadId].resolve();
         } else if (event.data.id === WorkerMessages.ToVM.GlobalsUpdate) {
             const { globalVariables } = event.data;
+            console.log("Global Variables from worker: ", globalVariables);
             if (this.runtimeRef && globalVariables) {
                 // Update the runtime's global variables with the received data
                 this.runtimeRef._globalVariables = Object.assign(this.runtimeRef._globalVariables || {}, globalVariables);
+                console.log("Updated Global Variables: ", this.runtimeRef._globalVariables);
             }
         } else if (event.data.id === WorkerMessages.ToVM.PythonError) {
             const { threadId, message, lineNumber, type } = event.data;
