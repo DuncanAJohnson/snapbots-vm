@@ -123,8 +123,6 @@ function _startGlobalPolling() {
                 const globals = {};
                 const rawGlobals = self.pyodide.globals.toJs();
 
-                console.log("Raw Globals: ", rawGlobals);
-                
                 // Filter out or transform non-serializable objects
                 for (const [key, value] of rawGlobals.entries()) {
                     try {
@@ -135,6 +133,11 @@ function _startGlobalPolling() {
                         
                         // Skip _pyodide_core
                         if (key === '_pyodide_core') {
+                            continue;
+                        }
+
+                        // Skip variables starting with thread_
+                        if (key.startsWith('thread_')) {
                             continue;
                         }
 
@@ -181,7 +184,7 @@ function _startGlobalPolling() {
                 
                 _postWorkerMessage({ 
                     id: WorkerMessages.ToVM.GlobalsUpdate, 
-                    globals: globals 
+                    globalVariables: globals 
                 });
             } catch (error) {
                 console.error("Error fetching globals:", error);
