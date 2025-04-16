@@ -120,7 +120,36 @@ function _startGlobalPolling() {
     _globalsPollingTimerId = setInterval(() => {
         if (self.pyodide && self.pyodide.globals) {
             try {
-                const globals = self.pyodide.globals.toJs();
+                const globals = {};
+                const rawGlobals = self.pyodide.globals.toJs();
+                
+                // Filter out or transform non-serializable objects
+                for (const key in rawGlobals) {
+                    try {
+                        const value = rawGlobals[key];
+                        const type = typeof value;
+                        
+                        // Skip functions or convert them to their string representation
+                        if (type === 'function') {
+                            globals[key] = '[Function]';
+                        } else if (value !== null && type === 'object') {
+                            // Try to identify if object is serializable
+                            try {
+                                // Test if it can be cloned by converting to JSON and back
+                                JSON.parse(JSON.stringify(value));
+                                globals[key] = value;
+                            } catch (e) {
+                                // If not serializable, provide type information instead
+                                globals[key] = `[Object: ${value.constructor ? value.constructor.name : 'Unknown'}]`;
+                            }
+                        } else {
+                            globals[key] = value;
+                        }
+                    } catch (err) {
+                        globals[key] = '[Unserializable]';
+                    }
+                }
+                
                 _postWorkerMessage({ 
                     id: WorkerMessages.ToVM.GlobalsUpdate, 
                     globals: globals 
