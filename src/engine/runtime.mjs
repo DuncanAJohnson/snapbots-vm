@@ -144,7 +144,7 @@ export default class Runtime extends EventEmitter {
                 this.compileTimeErrors.push({ threadId, message, lineNumber, type });
                 this.emit("COMPILE TIME ERROR", { threadId, message, lineNumber, type });
             }
-        });
+        }, this);
         this.workerLoaded = false;
         this.workerLoadPromise = this.pyatchWorker.loadWorker().then(() => {
             this.workerLoaded = true;

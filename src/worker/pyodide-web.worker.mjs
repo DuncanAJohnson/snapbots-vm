@@ -92,6 +92,44 @@ async function _initPyodide(interruptBuffer) {
     }
     _initPyodideState = self.pyodide._api.saveState();
     _postStatusMessage(WorkerMessages.ToVM.PyodideLoaded);
+    
+    // Start polling for global variables
+    _startGlobalPolling();
+}
+
+/**
+ * Polling interval in milliseconds
+ * @type {number}
+ */
+const GLOBALS_POLLING_INTERVAL = 500;
+
+/**
+ * ID of the globals polling timer
+ * @type {number|null}
+ */
+let _globalsPollingTimerId = null;
+
+/**
+ * Starts polling for Python global variables and sends updates to the VM
+ */
+function _startGlobalPolling() {
+    if (_globalsPollingTimerId !== null) {
+        clearInterval(_globalsPollingTimerId);
+    }
+    
+    _globalsPollingTimerId = setInterval(() => {
+        if (self.pyodide && self.pyodide.globals) {
+            try {
+                const globals = self.pyodide.globals.toJs();
+                _postWorkerMessage({ 
+                    id: WorkerMessages.ToVM.GlobalsUpdate, 
+                    globals: globals 
+                });
+            } catch (error) {
+                console.error("Error fetching globals:", error);
+            }
+        }
+    }, GLOBALS_POLLING_INTERVAL);
 }
 
 // This is a bad function for this purpose, but it works for now.

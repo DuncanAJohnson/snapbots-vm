@@ -7,7 +7,7 @@ import PyatchLinker from "../linker/pyatch-linker.mjs";
 import uid from "../util/uid.mjs";
 
 class PyatchWorker {
-    constructor(errorCallback) {
+    constructor(errorCallback, runtime = null) {
         this._worker = new Worker(new URL("./pyodide-web.worker.mjs", import.meta.url), { type: "module" });
 
         this._worker.onmessage = this.handleWorkerMessage.bind(this);
@@ -22,6 +22,7 @@ class PyatchWorker {
         this._threadPromiseMap = {};
 
         this.pyatchLinker = new PyatchLinker();
+        this.runtimeRef = runtime;
     }
 
     handleWorkerMessage(event) {
@@ -38,6 +39,12 @@ class PyatchWorker {
         } else if (event.data.id === WorkerMessages.ToVM.ThreadDone) {
             const { threadId } = event.data;
             this._threadPromiseMap[threadId].resolve();
+        } else if (event.data.id === WorkerMessages.ToVM.GlobalsUpdate) {
+            const { globalVariables } = event.data;
+            if (this.runtimeRef && globalVariables) {
+                // Update the runtime's global variables with the received data
+                this.runtimeRef._globalVariables = Object.assign(this.runtimeRef._globalVariables || {}, globalVariables);
+            }
         } else if (event.data.id === WorkerMessages.ToVM.PythonError) {
             const { threadId, message, lineNumber, type } = event.data;
             if (this._threadErrorCallbackMap[threadId]) {

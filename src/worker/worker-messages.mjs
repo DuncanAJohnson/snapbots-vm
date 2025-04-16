@@ -10,6 +10,7 @@ const WorkerMessages = {
         BlockOP: "BlockOP",
         EndOfThread: "EndOfThread",
         PromiseLoaded: "ThreadsRegistered",
+        GlobalsUpdate: "GlobalsUpdate",
     },
 
     FromVM: {
