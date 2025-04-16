@@ -179,8 +179,6 @@ function _startGlobalPolling() {
                         globals[key] = '[Unserializable]';
                     }
                 }
-
-                console.log("Globals: ", globals);
                 
                 _postWorkerMessage({ 
                     id: WorkerMessages.ToVM.GlobalsUpdate, 
