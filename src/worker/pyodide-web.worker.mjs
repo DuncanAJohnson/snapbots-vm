@@ -122,6 +122,8 @@ function _startGlobalPolling() {
             try {
                 const globals = {};
                 const rawGlobals = self.pyodide.globals.toJs();
+
+                console.log(rawGlobals);
                 
                 // Filter out or transform non-serializable objects
                 for (const key in rawGlobals) {
