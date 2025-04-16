@@ -126,25 +126,50 @@ function _startGlobalPolling() {
                 console.log("Raw Globals: ", rawGlobals);
                 
                 // Filter out or transform non-serializable objects
-                for (const key in rawGlobals) {
+                for (const [key, value] of rawGlobals.entries()) {
                     try {
-                        const value = rawGlobals[key];
-                        const type = typeof value;
+                        // Skip internal or special variables
+                        if (key.startsWith('__') && key.endsWith('__')) {
+                            continue;
+                        }
                         
-                        // Skip functions or convert them to their string representation
-                        if (type === 'function') {
+                        // Skip _pyodide_core
+                        if (key === '_pyodide_core') {
+                            continue;
+                        }
+
+                        if (value === undefined) {
+                            globals[key] = undefined;
+                        } else if (value === null) {
+                            globals[key] = null;
+                        } else if (typeof value === 'function') {
                             globals[key] = '[Function]';
-                        } else if (value !== null && type === 'object') {
-                            // Try to identify if object is serializable
+                        } else if (value._isPyProxy) {
+                            // Handle PyProxy objects
                             try {
-                                // Test if it can be cloned by converting to JSON and back
-                                JSON.parse(JSON.stringify(value));
+                                // Try to convert to JS primitive
+                                const jsValue = value.toJs();
+                                if (typeof jsValue === 'object' && jsValue !== null) {
+                                    // Check if serializable
+                                    JSON.stringify(jsValue);
+                                    globals[key] = jsValue;
+                                } else {
+                                    globals[key] = jsValue;
+                                }
+                            } catch (e) {
+                                // If we can't convert or serialize, use string representation
+                                globals[key] = `[Python: ${value.constructor ? value.constructor.name : 'Object'}]`;
+                            }
+                        } else if (typeof value === 'object') {
+                            // Handle normal JS objects
+                            try {
+                                JSON.stringify(value);
                                 globals[key] = value;
                             } catch (e) {
-                                // If not serializable, provide type information instead
                                 globals[key] = `[Object: ${value.constructor ? value.constructor.name : 'Unknown'}]`;
                             }
                         } else {
+                            // Handle primitives
                             globals[key] = value;
                         }
                     } catch (err) {
